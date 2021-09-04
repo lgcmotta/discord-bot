@@ -1,46 +1,35 @@
-import discord
+import os
 from discord.ext import commands
-import json
-from random import randint
+from dotenv import load_dotenv
+from os import listdir
+from os.path import isfile, join
 
-configuration = {}
+commands_dir = 'commands'
+cogs_dir = 'cogs'
 
-client = commands.Bot(command_prefix='!')
+load_dotenv()
 
+TOKEN = os.getenv('TOKEN')
 
-def get_greet_message(name=str):
-    greet_messages = [
-        f'Greetings, {name}!!',
-        f'Attention! {name} has something to say:',
-        f'Silence! Stop talking about {name}',
-        f'Everybody was waiting for you to join {name}',
-        f'You again {name}?',
-        f'{name}!!! I\'ve missed you here!',
-        f'{name} is online, nonsense is coming.',
-        f'I\'ve noticed you here {name}'
-    ]
-    return greet_messages[randint(0, len(greet_messages) - 1)]
+bot = commands.Bot(command_prefix='!')
 
 
-def read_config():
-    with open('config.json') as file:
-        json_config = json.load(file)
-        configuration['token'] = json_config['token']
-        configuration['greet_channel'] = json_config['greet_channel']
-        file.close()
-
-
-@client.event
+@bot.event
 async def on_ready():
-    print('Discord bot is up!')
+    print('Bot is online!')
 
 
-@client.event
-async def on_voice_state_update(member, before, after):
-    if not before.channel and after.channel:
-        channel = client.get_channel(configuration['greet_channel'])
-        await channel.send(get_greet_message(member.display_name))
+def load_commands():
+    for command in [file.replace('.py', '') for file in listdir(commands_dir) if isfile(join(commands_dir, file))]:
+        bot.load_extension(f'{commands_dir}.{command}')
 
-read_config()
 
-client.run(configuration['token'])
+def load_events():
+    for cog in [file.replace('.py', '') for file in listdir(cogs_dir) if isfile(join(cogs_dir, file))]:
+        bot.load_extension(f'{cogs_dir}.{cog}')
+
+
+load_commands()
+load_events()
+
+bot.run(TOKEN)

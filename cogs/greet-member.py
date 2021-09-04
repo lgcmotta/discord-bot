@@ -8,7 +8,7 @@ class GreetMember(commands.Cog):
         self.bot = bot
         self.GREET_CHANNEL = int(os.getenv('GREET_CHANNEL'))
 
-    def get_greet_message(name=str):
+    def get_greet_message(self, name=str):
         greet_messages = [
             f'Greetings, {name}!!',
             f'Attention! {name} has something to say:',
@@ -24,8 +24,9 @@ class GreetMember(commands.Cog):
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
         if not before.channel and after.channel:
-            channel = member.bot.get_channel(self.GREET_CHANNEL)
-            await channel.send(self.get_greet_message(member.display_name))
+            channel = self.bot.get_channel(self.GREET_CHANNEL)
+            greet_message = self.get_greet_message(member.display_name)
+            await channel.send(greet_message)
 
 
 def setup(bot):
